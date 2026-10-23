@@ -1,0 +1,154 @@
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  forward-headers-strategy: framework
+  error:
+    include-stacktrace: never
+    include-message: never
+  servlet:
+    session:
+      timeout: ${SESSION_TIMEOUT:8h}
+      cookie:
+        name: ARA_SESSION
+        http-only: true
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
+  tomcat:
+    max-swallow-size: 30MB
+    max-http-form-post-size: 1MB
+
+spring:
+  application:
+    name: agentic-rag-assistant
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/agentic_rag}
+    username: ${DATABASE_USERNAME:agentic}
+    password: ${DATABASE_PASSWORD:agentic}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:15}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    placeholders:
+      embedding_dimensions: ${EMBEDDING_DIMENSIONS:1536}
+  session:
+    jdbc:
+      initialize-schema: never
+      table-name: SPRING_SESSION
+      cleanup-cron: "0 */10 * * * *"
+  servlet:
+    multipart:
+      max-file-size: ${MAX_UPLOAD_SIZE:20MB}
+      max-request-size: ${MAX_UPLOAD_SIZE:20MB}
+  mvc:
+    async:
+      request-timeout: 180s
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+      roles: ADMIN
+      probes:
+        enabled: true
+  health:
+    mail:
+      enabled: false
+
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:true}
+    path: /swagger-ui.html
+
+logging:
+  structured:
+    format:
+      console: ${LOG_FORMAT:}
+  level:
+    root: INFO
+    com.capstone.agenticrag: ${APP_LOG_LEVEL:INFO}
+
+app:
+  frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  admin-emails: ${ADMIN_EMAILS:}
+  storage:
+    directory: ${STORAGE_DIR:./data/uploads}
+  ai:
+    # openai | ollama | none. "openai" also covers any OpenAI-compatible API (Groq, OpenRouter, LM Studio, vLLM).
+    provider: ${AI_PROVIDER:openai}
+    base-url: ${AI_BASE_URL:https://api.openai.com}
+    api-key: ${AI_API_KEY:}
+    model: ${AI_MODEL:gpt-4o-mini}
+    temperature: ${AI_TEMPERATURE:0.3}
+    max-output-tokens: ${AI_MAX_OUTPUT_TOKENS:1500}
+    request-timeout: ${AI_REQUEST_TIMEOUT:90s}
+    embedding:
+      # openai | ollama | hash | none. "hash" is an offline lexical fallback for demos only.
+      provider: ${EMBEDDING_PROVIDER:openai}
+      base-url: ${EMBEDDING_BASE_URL:}
+      api-key: ${EMBEDDING_API_KEY:}
+      model: ${EMBEDDING_MODEL:text-embedding-3-small}
+      dimensions: ${EMBEDDING_DIMENSIONS:1536}
+  agent:
+    max-iterations: ${AGENT_MAX_ITERATIONS:5}
+    max-tool-calls: ${AGENT_MAX_TOOL_CALLS:8}
+    tool-timeout: ${AGENT_TOOL_TIMEOUT:20s}
+    max-duration: ${AGENT_MAX_DURATION:150s}
+    recent-messages: ${CONTEXT_RECENT_MESSAGES:12}
+    summary-trigger-messages: ${CONTEXT_SUMMARY_TRIGGER:20}
+    max-tool-result-chars: 6000
+  rag:
+    chunk-size: ${RAG_CHUNK_SIZE:1200}
+    chunk-overlap: ${RAG_CHUNK_OVERLAP:200}
+    top-k: ${RAG_TOP_K:5}
+    similarity-threshold: ${RAG_SIMILARITY_THRESHOLD:0.30}
+    max-chunks-per-document: 4000
+  memory:
+    top-k: ${MEMORY_TOP_K:5}
+    similarity-threshold: ${MEMORY_SIMILARITY_THRESHOLD:0.35}
+    duplicate-threshold: ${MEMORY_DUPLICATE_THRESHOLD:0.90}
+    auto-extract: ${MEMORY_AUTO_EXTRACT:true}
+    max-per-user: 500
+  search:
+    # tavily | brave | searxng | none
+    provider: ${SEARCH_PROVIDER:none}
+    api-key: ${SEARCH_API_KEY:}
+    base-url: ${SEARCH_BASE_URL:}
+    max-results: ${SEARCH_MAX_RESULTS:5}
+    timeout: ${SEARCH_TIMEOUT:10s}
+    cache-ttl: ${SEARCH_CACHE_TTL:10m}
+    max-retries: 2
+  rate-limit:
+    chat-per-minute: ${RATE_LIMIT_CHAT_PER_MINUTE:20}
+    upload-per-minute: ${RATE_LIMIT_UPLOAD_PER_MINUTE:10}
+    auth-per-minute: ${RATE_LIMIT_AUTH_PER_MINUTE:10}
+  mail:
+    from: ${MAIL_FROM:no-reply@agentic-rag.local}
+    reset-token-ttl: 30m

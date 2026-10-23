@@ -1,0 +1,46 @@
+# Usage: copy .env.example to .env, set AI_API_KEY (and optionally SEARCH_*), then `docker compose up --build`.
+# The app is served at http://localhost:${FRONTEND_PORT:-3000}.
+services:
+  db:
+    image: pgvector/pgvector:0.8.1-pg17
+    environment:
+      POSTGRES_DB: agentic_rag
+      POSTGRES_USER: ${DATABASE_USERNAME:-agentic}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-agentic}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d agentic_rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/agentic_rag
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-agentic}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-agentic}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
+      CORS_ALLOWED_ORIGINS: ${FRONTEND_BASE_URL:-http://localhost:3000}
+      STORAGE_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  uploads:

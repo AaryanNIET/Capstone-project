@@ -1,0 +1,12 @@
+{
+  "name": "agentic-rag-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "mock": "node mock-openai.mjs",
+    "walkthrough": "node walkthrough.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.49.1"
+  }
+}
